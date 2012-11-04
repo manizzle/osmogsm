@@ -65,8 +65,13 @@ void dispatcher_handler(u_char *dumpfile,
 				secret[1],
 				secret[0]);
 
-		printf("frame_no = %d\n", frame_no);
-		uplink = pkt_data[36] & 0x40;
+		printf("frame = %d, ", frame_no);
+		if ((uplink = pkt_data[36] & 0x40) != 0) {
+			printf("uplink\n");
+		} else {
+			printf("downlink\n");
+		}
+
 		if ( (frame_no > 361543) && (frame_no < 361982))
 		{
 			a51_decrypt((unsigned char *)burst_data, (unsigned char *)key,
