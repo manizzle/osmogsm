@@ -36,7 +36,7 @@
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
- * 
+ *
  * The license and distribution terms for any publicly available version or
  * derivative of this code cannot be changed.  i.e. this code cannot simply be
  * copied and put under another distribution license
@@ -45,7 +45,7 @@
  * Background: The Global System for Mobile communications is the most widely
  * deployed cellular telephony system in the world. GSM makes use of
  * four core cryptographic algorithms, neither of which has been published by
- * the GSM MOU. This failure to subject the algorithms to public review is all  
+ * the GSM MOU. This failure to subject the algorithms to public review is all
  * the more puzzling given that over 100 million GSM
  * subscribers are expected to rely on the claimed security of the system.
  *
@@ -79,7 +79,7 @@
  * A variant of A5, while not A5/1 itself, has been estimated to have a
  * work factor of well below 54 bits. See http://jya.com/crack-a5.htm for
  * background information and references.
- * 
+ *
  * With COMP128 broken and A5/1 published below, we will now turn our attention
  * to A5/2. The latter has been acknowledged by the GSM community to have
  * been specifically designed by intelligence agencies for lack of security.
@@ -189,11 +189,11 @@ bit getbit() {
 int modfn(int frame)
 {
   int t1, t2, t3;
-  t1 = frame / 1326;
+  t1 = (frame / 1326);
   t2 = frame % 26;
   t3 = frame % 51;
-  
-  return (t1 << 11) | (t3 << 5) | t2  ;
+
+  return (t1 << 11) + (t3 << 5) + t2  ;
 }
 
 /* Do the A5/1 key setup.  This routine accepts a 64-bit key and
@@ -247,10 +247,10 @@ void keysetup(byte key[8], word frame) {
 //  R3 = 0x5f4e61;
 
 //  printf("giving up with known values: %x %x %x\n", R1, R2, R3);
-  
+
 	/* Now the key is properly set up. */
 }
-	
+
 /* Generate output.  We generate 228 bits of
  * keystream output.  The first 114 bits is for
  * the A->B frame; the next 114 bits is for the
@@ -263,7 +263,7 @@ void run(byte AtoBkeystream[], byte BtoAkeystream[]) {
 	/* Zero out the output buffers. */
 	for (i=0; i<=113/8; i++)
 		AtoBkeystream[i] = BtoAkeystream[i] = 0;
-	
+
 	/* Generate 114 bits of keystream for the
 	 * A->B direction.  Store it, MSB first. */
 	for (i=0; i<114; i++) {
@@ -324,7 +324,7 @@ void test() {
 	for (i=0; i<15; i++)
 		printf("%02X", BtoA[i]);
 	printf("\n");
-	
+
 	if (!failed) {
 		printf("Self-check succeeded: everything looks ok.\n");
 		return;
@@ -338,48 +338,48 @@ void test() {
 void
 a51_decrypt(unsigned char *stream, unsigned char *key, int frame_no, int uplink)
 {
-  int i,j;
-  int f;
+	int i,j;
+	int f;
+	int mod_frame_no = 0;
 
-  //do each of the 4 frames
-  for ( f = 0; f < 4; f++)
-  {
-    frame_no = modfn(f + frame_no);
-  	keysetup(key, frame_no);
+	//do each of the 4 bursts
+	for ( f = 0; f < 4; f++)
+	{
+		mod_frame_no = modfn(f + frame_no);
+		keysetup(key, mod_frame_no);
 
-    if (uplink)
-    {
-      //downlink first, then uplink
-      //so skip first 114 bits of keystream if uplink
-      for (i = 0; i < 114; i++)
-      {
-        clock();
-      }
-    }
-  
-  	// Generate the keystream
-  	for (i=0; i< 116; i++) 
-  	{
-      j = i%8;
-      if (i == 57 || i == 58)
-      {
-        //stealing bits dont matter
-      } else {
-        clock();
-        stream[i+116*f] ^= (getbit()<<7);
-      }
-  	}
-  	
-  }
-  
+		if (uplink != 0)
+		{
+			//downlink first, then uplink
+			//so skip first 114 bits of keystream if uplink
+			for (i = 0; i < 114; i++)
+			{
+				clock();
+			}
+		}
+
+		// Generate the keystream
+		for (i = 0; i < 116; i++)
+		{
+			if (i == 57 || i == 58)
+			{
+				//stealing bits dont matter
+			} else {
+				clock();
+				stream[i+116*f] ^= (getbit()<<7);
+			}
+		}
+
+	}
+
 }
 
 
 /*
 int main(int argc, const char *argv[]) {
 	int i;
-	
-  
+
+
 	// Decode the key from argv[1]
 	byte key[8];
 	for (i=0; i<8; i++) {
@@ -387,15 +387,15 @@ int main(int argc, const char *argv[]) {
 		sscanf(argv[1] + 2 * i, "%02x", &x);
 		key[i] = x;
 	}
-	
+
 	// Read the frame from argv[2]
 	word frame;
 	frame = strtol(argv[2], NULL, 0);
-	
+
 	// How many bits do we want?
 	int bitcount;
 	bitcount = strtol(argv[3], NULL, 0);
-	
+
 	// Initialize cryptographic state
 	keysetup(key, frame);
 
@@ -405,7 +405,7 @@ int main(int argc, const char *argv[]) {
 		printf("%1lu", getbit());
 	}
 	printf("\n");
-	
+
 	return 0;
-}
-*/
+	}
+	*/

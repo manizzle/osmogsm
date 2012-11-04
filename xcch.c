@@ -50,17 +50,17 @@ xcch_parity_check(ubit_t *d)
 {
 	uint64_t crc;
 	int i;
-  int fail = 0;
-  
-    crc= xcch_fire_crc(d);
+	int fail = 0;
+
+	crc= xcch_fire_crc(d);
 
 	/* Check it */
-	for (i=0; i<40; i++)
+	for (i=0; i<40; i++) {
 		if (  d[184+i] ^ ((crc >> (39-i)) & 1) )
-		{ 
-//      printf("Parity Fail at %d\n", i);
-      fail = 1;
+		{
+			fail = 1;
 		}
+	}
 
 	return fail;
 }
@@ -174,19 +174,19 @@ xcch_decode(uint8_t *l2_data, sbit_t *bursts)
 {
 	sbit_t iB[456], cB[456];
 	ubit_t conv[224];
-  int i, rv;
+	int i, rv;
 
 	for (i=0; i<4; i++){
 		xcch_burst_unmap(&iB[i * 114], &bursts[i * 116], NULL, NULL);
-  }
+	}
 	xcch_deinterleave(cB, iB);
 
 	osmo_conv_decode(&conv_xcch, cB, conv);
-	
+
 	rv = xcch_parity_check(conv);
 	if (rv)
 	{
-    printf("[X] PARITY FAILED\n");
+		printf("[X] PARITY FAILED\n");
 	}
 	//	return -1;
 
@@ -198,11 +198,11 @@ xcch_decode(uint8_t *l2_data, sbit_t *bursts)
 int
 xcch_encode(ubit_t *bursts, uint8_t *l2_data)
 {
-    sbit_t iB[456], cB[456];
+	sbit_t iB[456], cB[456];
 	ubit_t conv[224];
 
 	osmo_pbit2ubit_ext(conv, 0, l2_data, 0, 184, 1);
-    xcch_parity_write(conv);
+	xcch_parity_write(conv);
 	osmo_conv_encode(&conv_xcch, conv, cB);
 	xcch_interleave(bursts, cB);
 

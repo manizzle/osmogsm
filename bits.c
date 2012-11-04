@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 
 #include <osmocom/core/bits.h>
@@ -91,8 +90,8 @@ int osmo_pbit2ubit(ubit_t *out, const pbit_t *in, unsigned int num_bits)
  *  \returns length in bytes (max written offset of output buffer + 1)
  */
 int osmo_ubit2pbit_ext(pbit_t *out, unsigned int out_ofs,
-                       const ubit_t *in, unsigned int in_ofs,
-                       unsigned int num_bits, int lsb_mode)
+		const ubit_t *in, unsigned int in_ofs,
+		unsigned int num_bits, int lsb_mode)
 {
 	int i, op, bn;
 	for (i=0; i<num_bits; i++) {
@@ -116,8 +115,8 @@ int osmo_ubit2pbit_ext(pbit_t *out, unsigned int out_ofs,
  *  \returns length in bytes (max written offset of output buffer + 1)
  */
 int osmo_pbit2ubit_ext(ubit_t *out, unsigned int out_ofs,
-                       const pbit_t *in, unsigned int in_ofs,
-                       unsigned int num_bits, int lsb_mode)
+		const pbit_t *in, unsigned int in_ofs,
+		unsigned int num_bits, int lsb_mode)
 {
 	int i, ip, bn;
 	for (i=0; i<num_bits; i++) {
