@@ -1,0 +1,35 @@
+
+TMSI deadbeef: 361542 361624 558160 crack 010000111010001100001100011111011100011111111100010101100110111101000001110110100010110010000001010001101010100001
+
+frame number = 361542
+
+crackd: 
+
+name1> Found 2e736b7f618e54c6 @ 25  #120  (table:204)
+got output: #### Found potential key (bits: 25)####
+fae7abd5f48f8b4b -> fae7abd5f48f8b4b
+Framecount is 558160
+KC(0): 8a 46 0b 46 4d ec 93 e1  mismatch
+KC(1): 90 5b ed c8 67 44 b1 8f  mismatch
+KC(2): c7 6b 76 a9 f1 ac bd cb  *** MATCHED ***
+KC(3): 8e 47 42 e1 61 48 2e 78  mismatch
+KC(4): 0e 97 f5 81 a8 00 83 f0  mismatch
+KC(5): a1 61 5c 7d 0f cc 62 f6  mismatch
+KC(6): 60 fb ee 64 3a c6 f9 5c  mismatch
+KC(7): 4e c8 6f ec da 20 00 a6  mismatch
+KC(8): 9a 22 69 52 72 cb 31 a2  mismatch
+KC(9): 7d 5a 74 f3 84 45 50 f6  mismatch
+KC(10): c3 9a 21 0d d2 5a 5f 81  mismatch
+KC(11): fa 44 26 65 af f9 c7 d4  mismatch
+KC(12): 35 92 9c 6b 5e 55 73 4d  mismatch
+KC(13): 4a 76 1c ac 59 f0 74 1f  mismatch
+KC(14): 3a b2 36 a8 12 99 30 d4  mismatch
+KC(15): 5d a5 31 0a b3 91 60 ef  mismatch
+KC(16): 12 ba b9 09 03 74 ff 58  mismatch
+KC(17): 64 7b 36 62 ce 32 f8 ba  mismatch
+KC(18): eb bb 4c c8 bb e9 c8 d8  mismatch
+KC(19): a4 a4 c4 cb 0b 0c 57 6f  mismatch
+KC(20): 0c c3 51 69 4d 67 a9 8c  mismatch
+
+name1> Found Kc for TMSI deadbeef @ FN 361542: c76b76a9f1acbdcb
+FN 361542 KC c76b76a9f1acbdcb TMSI deadbeef
