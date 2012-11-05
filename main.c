@@ -9,19 +9,30 @@
 #include "a51.h"
 #include "xcch.h"
 
-char errbuf[PCAP_ERRBUF_SIZE];
-void* pcap_handle;
-pcap_dumper_t *pcap_wr_handle;
-
-int _packet_no;
-uint8_t	_key[8];
-
+// DEFINES
 #define LINE_LEN		16
 #define	BURST_SIZE		464
 #define	GSM_NORMAL_UM_TYPE	0x1
 #define	GSM_BURST_UM_TYPE	0x3
-
 #define DECRYPT_CHECK
+#define	MAX_DECRYPT_BLOCKS	100
+
+// STRUCTS
+typedef struct decrypt_block decrypt_block_t;
+
+struct decrypt_block  {
+	decrypt_block_t	*next;
+	unsigned int	start_frame;
+	unsigned int	end_frame;
+	uint8_t		key[8];
+};
+
+// GLOBALS
+char		errbuf[PCAP_ERRBUF_SIZE];
+void*		pcap_handle;
+pcap_dumper_t	*pcap_wr_handle;
+decrypt_block_t	*_decrypt_block;
+int		 _packet_no;
 
 static void
 burst_print(sbit_t *burst_data) {
@@ -59,7 +70,8 @@ dispatcher_handler(u_char *dumpfile,
 
 		uplink = pkt_data[36] & 0x40;
 #ifdef DEBUG
-		printf("%d | %ld:%ld (%u)\n", _packet_no, header->ts.tv_sec, header->ts.tv_usec, header->len);
+		printf("%d | %ld:%ld (%u)\n", _packet_no, header->ts.tv_sec,
+		    header->ts.tv_usec, header->len);
 
 		printf("frame = %d, ", frame_no);
 		if (uplink != 0) {
@@ -69,14 +81,21 @@ dispatcher_handler(u_char *dumpfile,
 		}
 #endif
 
-		// decrypt encrypted bursts
-		if ( (frame_no > 604674) && (frame_no < 604703)) {
-			a51_decrypt((unsigned char *)burst_data, (unsigned char *)_key,
-			    frame_no, uplink);
-			dest[45] = 0xf0; //mark antenna number as having decrypted first
+		if (frame_no > _decrypt_block->end_frame) {
+			if (_decrypt_block->next != NULL) {
+				_decrypt_block = _decrypt_block->next;
+			}
 		}
 
-#ifdef DECRYPT_CHECK // to use with b.pcap
+		// decrypt encrypted bursts
+		if (frame_no > _decrypt_block->start_frame &&
+		    frame_no < _decrypt_block->end_frame) {
+			a51_decrypt((unsigned char *)burst_data, (unsigned char *)_decrypt_block->key,
+			    frame_no, uplink);
+			dest[45] = 0xf0; //mark antenna number as decrypted
+		}
+
+#ifdef DECRYPT_CHECK // use this with b.pcap
 		if (frame_no == 604283) {
 			printf ("SANITY CHECK:\n");
 			printf("	frame = %d, ", frame_no);
@@ -104,12 +123,57 @@ dispatcher_handler(u_char *dumpfile,
 	}
 }
 
+static void
+parse_decrypt_block_file(FILE* fp, decrypt_block_t **db, size_t *lsize) {
+	long long int temp = 0x0;
+	char *linebuf, *split;
+
+	if (getline(&linebuf, lsize, fp) != -1) {
+		if (*db == NULL) {
+			*db = malloc(sizeof (decrypt_block_t));
+		}
+
+		printf("Frame block : ");
+
+		split = strtok(linebuf,  " \n\r");
+		(*db)->start_frame = strtol(split, NULL, 0);
+		printf("start = %ld, ", (*db)->start_frame);
+
+		split = strtok(NULL,  " \n\r");
+		(*db)->end_frame = strtol(split, NULL, 0);
+		printf("stop = %ld, ", (*db)->end_frame);
+
+		split = strtok(NULL,  " \n\r");
+		temp = strtoull(split, NULL, 0);
+		printf("key = 0x%llx\n", temp);
+
+		for (int k = 0, j = 7; k < 8; k++, j--) {
+			(*db)->key[j] = (temp >> (k * 8)) & 0xff;
+		}
+		free (linebuf);
+		parse_decrypt_block_file(fp, &(*db)->next, lsize);
+	}
+}
+
+static void
+free_decrypt_blocks(decrypt_block_t *db) {
+	if (db != NULL) {
+		decrypt_block_t	*db_next = db->next;
+		free (db);
+		free_decrypt_blocks(db_next);
+	}
+}
+
 int main(int argc, char *argv[])
 {
-	long long int temp = 0x0;
+	FILE			*keyfile;
+	int			i = 0;
+	size_t			lsize = 0;
+	decrypt_block_t	*head_decrypt_block;
 
 	if (argc != 4) {
-		printf("usage: ./a.out <input> <output> <key>");
+		printf("usage: %s <input file> <output file> <key file>",
+		    argv[0]);
 		return 1;
 	}
 
@@ -127,20 +191,27 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if ((temp = strtoull(argv[3], NULL, 0)) == 0) {
-		printf("bad key\n");
+	keyfile = fopen(argv[3], "r");
+
+	if (!keyfile) {
+		printf("Could not read key file %s\n", argv[3]);
 		return 1;
 	}
 
-	printf("using 0x%llx as key\n", temp);
+	/*
+	 * parse the key file for range - key pairs and
+	 * stuff those in a global list of structs
+	 */
+	head_decrypt_block = _decrypt_block = malloc(sizeof (decrypt_block_t));
+	parse_decrypt_block_file(keyfile, &_decrypt_block, &lsize);
 
-	for (int i = 0, j = 7; i < 8; i++, j--) {
-		_key[j] = (temp >> (i * 8)) & 0xff;
-	}
+	fclose(keyfile);
 
 	printf("starting ... \n");
 	pcap_loop(pcap_handle, 0, dispatcher_handler, (unsigned char *)pcap_wr_handle);
 	printf("done!\n");
+
+	free_decrypt_blocks(head_decrypt_block);
 
 	pcap_dump_close(pcap_wr_handle);
 	pcap_close(pcap_handle);
