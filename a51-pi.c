@@ -345,7 +345,7 @@ a51_decrypt(unsigned char *stream, unsigned char *key, int frame_no, int uplink)
 	//do each of the 4 bursts
 	for ( f = 0; f < 4; f++)
 	{
-		mod_frame_no = modfn(f + frame_no);
+		mod_frame_no = modfn(f - 3 + frame_no);
 		keysetup(key, mod_frame_no);
 
 		if (uplink != 0)

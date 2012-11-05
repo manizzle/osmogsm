@@ -161,7 +161,7 @@ xcch_burst_unmap(sbit_t *iB, sbit_t *eB, sbit_t *hl, sbit_t *hn)
 	memcpy(iB,    eB,    57);
 	memcpy(iB+57, eB+59, 57);
 
-  printf("WUT %x %x\n", (eB[57]&0xff)>>7, (eB[58]&0xff)>>7);
+//  printf("WUT %x %x\n", (eB[57]&0xff)>>7, (eB[58]&0xff)>>7);
 	if (hl)
 		*hl = eB[57];
 
@@ -186,7 +186,7 @@ xcch_decode(uint8_t *l2_data, sbit_t *bursts)
 	rv = xcch_parity_check(conv);
 	if (rv)
 	{
-		printf("[X] PARITY FAILED\n");
+//		printf("[X] PARITY FAILED\n");
 	}
 	//	return -1;
 
